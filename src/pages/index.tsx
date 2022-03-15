@@ -1,6 +1,6 @@
-
-import styles from './home.module.scss';
-import Header from '../components/Header';
+/* eslint-disable no-param-reassign */
+/* eslint-disable no-return-assign */
+/* eslint-disable react/no-danger */
 import { GetStaticProps } from 'next';
 import Head from 'next/head';
 import { FiCalendar, FiClock, FiUser } from 'react-icons/fi';
@@ -10,8 +10,10 @@ import { ptBR } from 'date-fns/locale';
 import Link from 'next/link';
 import { ReactElement, useState } from 'react';
 import { getPrismicClient } from '../services/prismic';
-import commonStyles from '../styles/common.module.scss';
 
+import commonStyles from '../styles/common.module.scss';
+import styles from './home.module.scss';
+import Header from '../components/Header';
 
 interface Post {
   uid?: string;
@@ -116,7 +118,7 @@ export default function Home({
   return (
     <>
       <Head>
-        <title>Home</title>
+        <title>Home | spacetraveling</title>
       </Head>
 
       <main className={commonStyles.container}>

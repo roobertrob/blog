@@ -105,49 +105,81 @@ const readTime = Math.ceil(words/200)
 export const getStaticPaths: GetStaticPaths = async () => {
   const prismic = getPrismicClient();
   const posts = await prismic.query([
-    Prismic.Predicates.at('document.type','posts')
+    Prismic.Predicates.at('document.type', 'posts'),
   ]);
-  const paths = posts.results.map((post) =>{
-    return{
-      params:{
-        slug:post.uid,
-      }
-    }
-  })
+
+  const paths = posts.results.map(post => {
+    return {
+      params: {
+        slug: post.uid,
+      },
+    };
+  });
+
   return {
-    paths: [],
+    paths,
     fallback: true,
-  }
+  };
 };
 
-export const getStaticProps: GetStaticProps = async context => {
+export const getStaticProps: GetStaticProps = async ({
+  params,
+  preview = false,
+  previewData,
+}) => {
   const prismic = getPrismicClient();
-  const { slug } = context.params;
-  const response = await prismic.getByUID<any>('posts', String(slug), {});
-  const post: Post = {
+  const { slug } = params;
+  const response = await prismic.getByUID('posts', String(slug), {
+    ref: previewData?.ref || null,
+  });
+
+  const prevPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.first_publication_date]',
+    }
+  );
+
+  const nextPost = await prismic.query(
+    [Prismic.Predicates.at('document.type', 'posts')],
+    {
+      pageSize: 1,
+      after: response.id,
+      orderings: '[document.last_publication_date desc]',
+    }
+  );
+
+  const post = {
     uid: response.uid,
     first_publication_date: response.first_publication_date,
+    last_publication_date: response.last_publication_date,
     data: {
       title: response.data.title,
       subtitle: response.data.subtitle,
       author: response.data.author,
       banner: {
-        url: response.data.banner.url
+        url: response.data.banner.url,
       },
       content: response.data.content.map(content => {
         return {
-          heading: content, heading,
+          heading: content.heading,
           body: [...content.body],
-        }
-      })
-    }
+        };
+      }),
+    },
+  };
 
-  }
   return {
     props: {
       post,
-    }
-  }
-
-
+      navigation: {
+        prevPost: prevPost?.results,
+        nextPost: nextPost?.results,
+      },
+      preview,
+    },
+    revalidate: 1800,
+  };
 };
